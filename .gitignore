@@ -2,6 +2,9 @@
 bibliography/
 bin/
 obj/
+res/
+output/
 */*.jpg
 *.cbp
 *.depend
+*.layout
