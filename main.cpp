@@ -10,39 +10,53 @@ using namespace std;
 
 using namespace cv;
 
+
+inline float map(float val, float start1, float stop1, float start2, float stop2) {
+  return (((stop2 - start2) / (stop1 - start1)) * val + start2);
+}
+
+Mat getGrayscale(int width, int height);
+
 int main(int argc, char *argv[]) {
-  if(argc < 2 || argc > 4) {
-    cerr << "Incorrect usage. Usage is..." << endl;
-    cerr << "\tkuwuhara <inputImg> <radius> <outputImg>" << endl;
+  const string IMG_PATH = "../../res/",
+               IMG_NAME = "suncat",
+               IMG_EXT = ".jpg",
+               IMG_FILENAME = IMG_PATH + IMG_NAME + IMG_EXT;
 
-    exit(EXIT_FAILURE);
-  }
+  cout << "File: " << IMG_FILENAME << endl;
+  Mat inputImg  = imread(IMG_FILENAME, IMREAD_COLOR),
+      outputImg = getGrayscale(512, 512);
 
-  const string OUTPUT_PATH = "../../output/r" + to_string(atoi(argv[2])) + "_" + string(argv[3]);
+  const Mat THRESH_MAP_4 = (Mat_<int>(2, 2) <<
+    0, 2,
+    3, 1
+  );
 
-  cout << "Input image path: " << argv[1] << '\n'
-       << "Kernel radius:    " << argv[2] << '\n'
-       << "Output image:     " << OUTPUT_PATH << '\n' << endl;
+  const Mat THRESH_MAP_16 = (Mat_<int>(4, 4) <<
+     0,  8,  2, 10,
+    12,  4, 14,  6,
+     3, 11,  1,  9,
+    15,  7, 13,  5
+  );
 
-  Mat inputImg = imread(argv[1], IMREAD_COLOR),
-      outputImg = Kuwahara::applyFilter(inputImg, atoi(argv[2]));
+  cout << "Threshold map 4:  " << THRESH_MAP_4  << '\n'
+       << "Threshold map 16: " << THRESH_MAP_16 << '\n' << endl;
 
-  imwrite(OUTPUT_PATH, outputImg);
-  cout << "Image written to path: " << OUTPUT_PATH << endl;
-
-  // const int RADIUS = 8;
-
-  // const string IMG_PATH = "./res/",
-  //              IMG_NAME = "valentin",
-  //              IMG_EXT = ".jpg",
-  //              IMG_FILENAME = IMG_PATH + IMG_NAME + IMG_EXT;
-
-  // cout << IMG_FILENAME << endl;
-  // Mat inputImg = imread(IMG_FILENAME, IMREAD_COLOR),
-  //     outputImg = Kuwahara::applyFilter(inputImg, RADIUS);
-
-  // imwrite("./output/" + IMG_NAME + "_r" + to_string(RADIUS) + ".jpg", outputImg);
-
+  imshow("Output", outputImg);
   waitKey();
   return 0;
+}
+
+Mat getGrayscale(int width, int height) {
+  Mat output = Mat::zeros(512, 512, CV_8UC1);
+  
+  // Creating grayscale image
+  for(int r = 0; r < output.rows; r++) {
+    uchar *outputRows = (uchar *) output.ptr<uchar>(r);
+
+    for(int c = 0; c < output.cols; c++)
+      outputRows[c] = map(c, 0, output.cols, 0, 255);
+  }
+
+  return output;
 }
