@@ -25,22 +25,33 @@ int main(int argc, char *argv[]) {
 
   cout << "File: " << IMG_FILENAME << endl;
   Mat inputImg  = imread(IMG_FILENAME, IMREAD_COLOR),
-      outputImg = getGrayscale(512, 512);
+      outputImg = inputImg.clone();
+
+  cvtColor(outputImg, outputImg, COLOR_BGR2GRAY);
 
   const Mat THRESH_MAP_4 = (Mat_<int>(2, 2) <<
     0, 2,
     3, 1
   );
 
-  const Mat THRESH_MAP_16 = (Mat_<int>(4, 4) <<
-     0,  8,  2, 10,
-    12,  4, 14,  6,
-     3, 11,  1,  9,
-    15,  7, 13,  5
+  const Mat THRESH_MAP_16 = (Mat_<float>(4, 4) <<
+     0.0/16,  8.0/16,  2.0/16, 10.0/16,
+    12.0/16,  4.0/16, 14.0/16,  6.0/16,
+     3.0/16, 11.0/16,  1.0/16,  9.0/16,
+    15.0/16,  7.0/16, 13.0/16,  5.0/16
   );
 
-  cout << "Threshold map 4:  " << THRESH_MAP_4  << '\n'
-       << "Threshold map 16: " << THRESH_MAP_16 << '\n' << endl;
+  for(int i = 0; i < outputImg.rows; i++) {
+    int mapRowId = i % THRESH_MAP_16.rows;
+
+    float    *mapRow = (float *) THRESH_MAP_16.ptr<float>(mapRowId);
+    uchar *outputRow = (uchar *) outputImg.ptr<uchar>(i);
+
+    for(int j = 0; j < outputImg.cols; j++) {
+      int mapCol = j % THRESH_MAP_16.cols;
+      outputRow[j] = (outputRow[j]/255.0 > mapRow[mapCol]) ? 255 : 0;
+    }
+  }
 
   imshow("Output", outputImg);
   waitKey();
@@ -48,7 +59,7 @@ int main(int argc, char *argv[]) {
 }
 
 Mat getGrayscale(int width, int height) {
-  Mat output = Mat::zeros(512, 512, CV_8UC1);
+  Mat output = Mat::zeros(width, height, CV_8UC1);
   
   // Creating grayscale image
   for(int r = 0; r < output.rows; r++) {
