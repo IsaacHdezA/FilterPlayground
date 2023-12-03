@@ -16,7 +16,7 @@ int main(void) {
                  IMG_FILENAME = IMG_PATH + IMG_NAME + IMG_EXT;
 
     cout << "Input image path: " << IMG_FILENAME << endl;
-    Mat output = imread(IMG_FILENAME);
+    Mat output = imread(IMG_FILENAME, IMREAD_GRAYSCALE);
     imshow("hola", output);
 
     waitKey();
