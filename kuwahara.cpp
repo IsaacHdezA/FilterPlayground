@@ -7,8 +7,6 @@ cv::Mat Kuwahara::applyFilter(const cv::Mat &src, int RADIUS) {
   Kuwahara proxy;
 
   if(src.channels() > 1) {
-    std::cout << "Color image" << std::endl;
-
     cv::Mat output;
     cvtColor(src, output, cv::COLOR_BGR2HSV);
 
