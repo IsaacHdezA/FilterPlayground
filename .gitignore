@@ -1,0 +1,7 @@
+.vscode/
+bibliography/
+bin/
+obj/
+*/*.jpg
+*.cbp
+*.depend
