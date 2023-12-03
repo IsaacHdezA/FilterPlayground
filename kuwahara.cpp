@@ -1,9 +1,37 @@
 #include <iostream>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include "kuwahara.hpp"
 
 cv::Mat Kuwahara::applyFilter(const cv::Mat &src, int RADIUS) {
-  cv::Mat output = cv::Mat::zeros(src.rows, src.cols, CV_8UC1);
   Kuwahara proxy;
+
+  if(src.channels() > 1) {
+    std::cout << "Color image" << std::endl;
+
+    cv::Mat output;
+    cvtColor(src, output, cv::COLOR_BGR2HSV);
+
+    std::vector<cv::Mat> channels{3};
+    cv::split(output, channels);
+
+    channels[2] = proxy.applyToChannel(channels[2], RADIUS);
+
+    merge(channels, output);
+    cv::cvtColor(output, output, cv::COLOR_HSV2BGR);
+
+    return output;
+  }
+
+  cv::Mat output = cv::Mat::zeros(src.rows, src.cols, CV_8UC1);
+  output = proxy.applyToChannel(src, RADIUS);
+
+  return output;
+}
+
+cv::Mat Kuwahara::applyToChannel(const cv::Mat &src, int RADIUS) {
+  Kuwahara proxy;
+  cv::Mat output = cv::Mat::zeros(src.rows, src.cols, CV_8UC1);
 
   std::vector<Region> regions{4};
 

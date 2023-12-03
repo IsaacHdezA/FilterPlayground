@@ -29,24 +29,16 @@ int main(int argc, char *argv[]) {
 
   // imwrite(OUTPUT_PATH, outputImg);
 
-  const int RADIUS = 10;
+  const int RADIUS = 8;
 
   const string IMG_PATH = "./res/",
-               IMG_NAME = "mano",
+               IMG_NAME = "valentin",
                IMG_EXT = ".jpg",
                IMG_FILENAME = IMG_PATH + IMG_NAME + IMG_EXT;
 
   cout << IMG_FILENAME << endl;
   Mat inputImg = imread(IMG_FILENAME, IMREAD_COLOR),
-      outputImg;
-
-  cvtColor(inputImg, outputImg, COLOR_BGR2HSV);
-
-  vector<Mat> channels{3};
-  split(outputImg, channels);
-  channels[2] = Kuwahara::applyFilter(channels[2], RADIUS);
-  merge(channels, outputImg);
-  cvtColor(outputImg, outputImg, COLOR_HSV2BGR);
+      outputImg = Kuwahara::applyFilter(inputImg, RADIUS);
 
   imwrite("./output/" + IMG_NAME + "_r" + to_string(RADIUS) + ".jpg", outputImg);
 

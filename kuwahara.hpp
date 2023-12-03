@@ -16,5 +16,6 @@ class Kuwahara {
 
   private:
     std::vector<Region> getRegions(const int RADIUS, const cv::Mat &src, int x, int y);
+    cv::Mat applyToChannel(const cv::Mat &src, int RADIUS);
     uchar getKuwaharaPixel(const std::vector<Region> &regions);
 };
