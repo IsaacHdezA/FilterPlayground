@@ -20,15 +20,22 @@ Mat getGrayscale(int width, int height);
 
 int main(int argc, char *argv[]) {
   const string IMG_PATH = "../../res/",
-               IMG_NAME = "me",
+               IMG_NAME = "catguitar",
                IMG_EXT = ".jpg",
                IMG_FILENAME = IMG_PATH + IMG_NAME + IMG_EXT;
 
   cout << "File: " << IMG_FILENAME << endl;
   Mat inputImg  = imread(IMG_FILENAME, IMREAD_COLOR),
-      outputImg = Dither::applyFilter(inputImg);
+      // outputImg = Kuwahara::applyFilter(inputImg, 12);
+      // outputImg = Dither::applyFilter(inputImg);
+      outputImg = Dither::applyFilter(Kuwahara::applyFilter(inputImg, 12));
+  
 
-  imshow("Output", outputImg);
+  const string OUTPUT_PATH = "../../output/" + IMG_NAME + "_dithered.jpg";
+
+  imwrite(OUTPUT_PATH, outputImg);
+  cout << "Image written into: " << OUTPUT_PATH << endl;
+
   waitKey();
   return 0;
 }
