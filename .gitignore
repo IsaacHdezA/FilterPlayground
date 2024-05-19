@@ -1,5 +1,6 @@
 .vscode/
 bibliography/
+build/
 bin/
 obj/
 res/
@@ -8,3 +9,4 @@ output/
 *.cbp
 *.depend
 *.layout
+FilterPlayground

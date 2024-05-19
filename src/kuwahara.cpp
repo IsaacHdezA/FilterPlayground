@@ -1,7 +1,7 @@
 #include <iostream>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include "kuwahara.hpp"
+#include "../include/kuwahara.hpp"
 
 cv::Mat Kuwahara::applyFilter(const cv::Mat &src, int RADIUS) {
   Kuwahara proxy;
