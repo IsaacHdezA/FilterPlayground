@@ -5,6 +5,7 @@
 using namespace std;
 using std::string;
 
+#include "include/kmeans.hpp"
 #include "include/kuwahara.hpp"
 #include "include/dither.hpp"
 
@@ -35,9 +36,10 @@ int main(int argc, char *argv[]) {
 
     cout << "File: " << IMG_FILENAME << endl;
     Mat inputImg     = imread(IMG_FILENAME, IMREAD_COLOR),
-        outputImg    = Kuwahara::applyFilter(inputImg, 12);
+        // outputImg = Kuwahara::applyFilter(inputImg, 12);
         // outputImg = Dither::applyFilter(inputImg);
         // outputImg = Dither::applyFilter(Kuwahara::applyFilter(inputImg, 12));
+        outputImg = KMeans::applyFilter(inputImg, 5);
 
     const string OUTPUT_PATH = IMG_PATH + IMG_NAME + "_dithered.jpg";
 

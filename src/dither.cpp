@@ -2,9 +2,7 @@
 
 #include <opencv2/imgproc/imgproc.hpp>
 
-Dither::Dither(int n) {
-
-}
+Dither::Dither(int n) {}
 
 void Dither::setThreshMap(int n) {
   switch(n){

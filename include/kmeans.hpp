@@ -8,15 +8,12 @@ class KMeans {
     static cv::Mat applyFilter(const cv::Mat &src, int k = 4);
 
   private:
-    int k;
-    int iter;
-    std::vector<cv::Mat> centroids;
-    cv::Mat src;
-
-    cv::Mat kMeans(int k, int iter = 500);
-
     int randInt(int min, int max = 0) { return (rand() % (max - min)) + min; } 
+
+    cv::Mat kMeans(const cv::Mat &src, int k, int iter = 500);
+
     int minIdx();
+    void initializeCentroids(const cv::Mat &src, cv::Mat centroids, int k);
     void findClosestCentroids();
     void computeCentroids();
-}
+};
