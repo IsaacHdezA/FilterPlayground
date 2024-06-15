@@ -12,8 +12,11 @@ class KMeans {
 
     cv::Mat kMeans(const cv::Mat &src, int k, int iter = 500);
 
-    int minIdx();
+    uchar minIdx(const cv::Mat distances);
     void initializeCentroids(const cv::Mat &src, cv::Mat centroids, int k);
-    void findClosestCentroids();
-    void computeCentroids();
+    void findClosestCentroids(const cv::Mat &src, const cv::Mat &centroids, cv::Mat &memberships);
+    void computeCentroids(const cv::Mat &src, cv::Mat &centroids, const cv::Mat &memberships);
+
+    template<typename T>
+    float distance(const T &pt1, const T &pt2);
 };
