@@ -15,7 +15,7 @@ using namespace std;
 cv::Mat KMeans::applyFilter(const cv::Mat &src, int k) {
   KMeans proxy;
 
-  cv::Mat output = proxy.kMeans(src, k, 1) ;
+  cv::Mat output = proxy.kMeans(src, k, 10) ;
   cv::Mat resizedOutput;
 
   cv::resize(output, resizedOutput, cv::Size(500, 500), 0, 0, cv::INTER_LINEAR);
@@ -32,8 +32,11 @@ cv::Mat KMeans::kMeans(const cv::Mat &src, int k, int iter) {
   cv::Mat centroids = cv::Mat::zeros(k, 1, src.type());
   cv::Mat memberships = cv::Mat::zeros(src.rows * src.cols, 1, CV_8UC1);
 
+  cout << "Starting centroids:\n" << centroids << endl;
+
   // 1. Initialize Centroids
   proxy.initializeCentroids(src, centroids, k);
+  cout << "Initialized centroids:\n" << centroids << endl;
 
   // 2. Repeat:
   for(int i = 0; i < iter; i++) {
@@ -41,6 +44,8 @@ cv::Mat KMeans::kMeans(const cv::Mat &src, int k, int iter) {
     proxy.findClosestCentroids(src, centroids, memberships);
 
     // 2. Move cluster centroids
+    proxy.computeCentroids(src, centroids, memberships);
+    cout << "Updated centroids in generation " << i << ":\n" << centroids << endl;
   }
 
   return output; 
@@ -96,4 +101,22 @@ float KMeans::distance(const T &pt1, const T &pt2) {
 }
 
 void KMeans::computeCentroids(const cv::Mat &src, cv::Mat &centroids, const cv::Mat &memberships) {
+  cv::Vec3f sums  = cv::Vec3f::zeros(),
+            count = cv::Vec3f::zeros();
+
+  for(int k = 0; k < centroids.rows; k++) {
+    for(int r = 0; r < src.rows; r++) {
+      for(int c = 0; c < src.rows; c++) {
+        if(memberships.at<uchar>(r, c) == k) {
+          for(int channel = 0; channel < src.channels(); channel++) {
+            sums[channel] += src.at<uchar>(r, c);
+            count[channel]++;
+          }
+        }
+      }
+    }
+
+    for(int channel = 0; channel < src.channels(); channel++)
+      centroids.at<uchar>(k) = sums[channel] / count[channel];
+  } 
 }
