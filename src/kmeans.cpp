@@ -1,42 +1,23 @@
 #include <iostream>
 
-using namespace std;
-
 #include "../include/kmeans.hpp"
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-// KMeans::KMeans(const cv::Mat &src, int k) {
-//   this->src = src.clone();
-//   this->centroids = cv::Mat::zeros(k, 1, this->src.type());
-// }  
-
-cv::Mat KMeans::applyFilter(const cv::Mat &src, int k) {
+cv::Mat KMeans::applyFilter(const cv::Mat &src, int k, int iter) {
   KMeans proxy;
 
-  cv::Mat output = proxy.kMeans(src, k, 10) ;
-  cv::Mat resizedOutput;
-
-  cv::resize(output, resizedOutput, cv::Size(500, 500), 0, 0, cv::INTER_LINEAR);
-
-  imshow("Source image", resizedOutput);
-  cv::waitKey();
-
-  return output;
+  return proxy.kMeans(src, k, iter);
 }
 
 cv::Mat KMeans::kMeans(const cv::Mat &src, int k, int iter) {
   KMeans proxy;
-  cv::Mat output = src.clone();
-  cv::Mat centroids = cv::Mat::zeros(k, 1, src.type());
-  cv::Mat memberships = cv::Mat::zeros(src.rows * src.cols, 1, CV_8UC1);
-
-  cout << "Starting centroids:\n" << centroids << endl;
+  std::vector<cv::Vec3b> centroids(k);
+  std::vector<uchar> memberships(src.rows * src.cols, 0);
 
   // 1. Initialize Centroids
   proxy.initializeCentroids(src, centroids, k);
-  cout << "Initialized centroids:\n" << centroids << endl;
 
   // 2. Repeat:
   for(int i = 0; i < iter; i++) {
@@ -45,49 +26,48 @@ cv::Mat KMeans::kMeans(const cv::Mat &src, int k, int iter) {
 
     // 2. Move cluster centroids
     proxy.computeCentroids(src, centroids, memberships);
-    cout << "Updated centroids in generation " << i << ":\n" << centroids << endl;
   }
 
-  return output; 
+  return proxy.buildImage(src, centroids, memberships);
 }
 
-void KMeans::initializeCentroids(const cv::Mat &src, cv::Mat centroids, int k) {
+void KMeans::initializeCentroids(const cv::Mat &src, std::vector<cv::Vec3b> &centroids, int k) {
   KMeans proxy;
 
   for(int i = 0; i < k; i++) {
     int randY = proxy.randInt(0, src.rows),
         randX = proxy.randInt(0, src.cols);
     
-    centroids.at<cv::Vec3b>(i) = src.at<cv::Vec3b>(randY, randX);
+    centroids[i] = src.at<cv::Vec3b>(randY, randX);
   }
 }
 
-uchar KMeans::minIdx(const cv::Mat distances) {
-  float minDist = distances.at<float>(0);
-  uchar minId = 0;
-
-  for(uchar i = 0; i < distances.rows; i++)
-    if(distances.at<float>(i) < minDist) {
-      minId = i;
-      minDist = distances.at<float>(i);
-    }
-
-  return minId;
-}
-
-void KMeans::findClosestCentroids(const cv::Mat &src, const cv::Mat &centroids, cv::Mat &memberships) {
+void KMeans::findClosestCentroids(const cv::Mat &src, const std::vector<cv::Vec3b> &centroids, std::vector<uchar> &memberships) {
   KMeans proxy;
-  cv::Mat distances = cv::Mat::zeros(centroids.rows, 1, CV_32FC1);
+  std::vector<float> distances(centroids.size());
 
   for(int r = 0; r < src.rows; r++) {
     cv::Vec3b *row = (cv::Vec3b *) src.ptr<cv::Vec3b>(r);
 
     for(int c = 0; c < src.cols; c++) {
-      for(int k = 0; k < centroids.rows; k++) distances.at<float>(k) = proxy.distance(row[c], centroids.at<cv::Vec3b>(k));
+      for(int k = 0; k < centroids.size(); k++) distances[k] = proxy.distance(row[c], centroids[k]);
 
-      memberships.at<uchar>((r * src.cols) + c) = proxy.minIdx(distances);
+      memberships[(r * src.cols) + c] = proxy.minIdx(distances);
     }
   }
+}
+
+uchar KMeans::minIdx(const std::vector<float> distances) {
+  float minDist = distances[0];
+  int minId = 0;
+
+  for(int i = 0; i < distances.size(); i++)
+    if(distances[i] < minDist) {
+      minId = i;
+      minDist = distances[i];
+    }
+
+  return minId;
 }
 
 template<typename T>
@@ -100,23 +80,36 @@ float KMeans::distance(const T &pt1, const T &pt2) {
   return sqrtf(dist);
 }
 
-void KMeans::computeCentroids(const cv::Mat &src, cv::Mat &centroids, const cv::Mat &memberships) {
-  cv::Vec3f sums  = cv::Vec3f::zeros(),
-            count = cv::Vec3f::zeros();
+void KMeans::computeCentroids(const cv::Mat &src, std::vector<cv::Vec3b> &centroids, const std::vector<uchar> &memberships) {
+  for(int k = 0; k < centroids.size(); k++) {
+    cv::Vec3f sums  = cv::Vec3f::zeros();
+    unsigned long int count = 0;
 
-  for(int k = 0; k < centroids.rows; k++) {
     for(int r = 0; r < src.rows; r++) {
-      for(int c = 0; c < src.rows; c++) {
-        if(memberships.at<uchar>(r, c) == k) {
-          for(int channel = 0; channel < src.channels(); channel++) {
-            sums[channel] += src.at<uchar>(r, c);
-            count[channel]++;
-          }
+      for(int c = 0; c < src.cols; c++) {
+        if(memberships[(r * src.cols) + c] == k) {
+          cv::Vec3b point = src.at<cv::Vec3b>(r, c);
+
+          for(int channel = 0; channel < src.channels(); channel++) sums[channel] += point[channel];
+          count++;
         }
       }
     }
 
-    for(int channel = 0; channel < src.channels(); channel++)
-      centroids.at<uchar>(k) = sums[channel] / count[channel];
+    for(int channel = 0; channel < src.channels(); channel++) centroids[k][channel] = (uchar) (sums[channel] / count);
   } 
+}
+
+cv::Mat KMeans::buildImage(const cv::Mat &src, const std::vector<cv::Vec3b> &centroids, const std::vector<uchar> &memberships) {
+  cv::Mat output = src.clone();
+
+  for(int r = 0; r < output.rows; r++) {
+    cv::Vec3b *outputRow = output.ptr<cv::Vec3b>(r);
+
+    for(int c = 0; c < output.rows; c++) {
+      outputRow[c] = centroids[memberships[(r * src.cols) + c]];
+    }
+  }
+
+  return output;
 }

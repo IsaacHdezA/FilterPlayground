@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     const string OUTPUT_PATH = IMG_PATH + IMG_NAME + "_dithered.jpg";
 
-    imwrite(OUTPUT_PATH, outputImg);
+    // imwrite(OUTPUT_PATH, outputImg);
     cout << "Image written into: " << OUTPUT_PATH << endl;
 
     return 0;
